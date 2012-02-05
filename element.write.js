@@ -28,12 +28,13 @@
  * toElement takes an optional 2nd argument: listeners.
  *
  * listeners is just like the handlers object passed to HTMLParser, but
- * with two additions:
+ * with a few additions:
  * 1. If the handler function returns false, then no action is taken (the handler
  *	 is assumed to have handled the event).
  * 2. The last argument is a state object. The stack property is the current
  * element stack. last() is the current parent element. push() and pop() will
  * push and pop the current parent element, which affects where content is created.
+ * 3. There is a close() listener that will be called when the writer is closed.
  *
  * See the listeners qunit test for an example.
  */
@@ -299,17 +300,35 @@
 			},
 			chars: function( text ) {
 				if(listen('chars',text) === false) return;
-				if(module.debug.write) console.log('WRITE chars',text);
+				if(module.debug.write) console.log('WRITE chars',text,'el:',element);
 				curParentNode.appendChild( doc.createTextNode( text ) );
 			},
 			comment: function( text ) {
 				if(listen('comment',text) === false) return;
 				// create comment node
+			},
+			close: function() {
+				if(listen('close') === false) return;
+				if(module.debug.write) console.log('WRITE close el:',element);
+			},
+			_handle: function(event) {
+				listen.apply(this,arguments);
 			}
 		});
 
-		return {
-			handlers: handlers,
+		return listeners.writer = {
+			/**
+			 * Hook for calling custom listener methods.
+			 *
+			 * e.g., defining pause & resume methods.
+			 */
+			handle: function(event,args) {
+				if(handlers[event]) {
+					handlers[event].apply(handlers,args || []);
+				} else {
+					handlers._handle.apply(handlers,arguments);
+				}
+			},
 			write: function(html) {
 				parser.parseMore(html);
 				return this;
@@ -320,6 +339,7 @@
 			},
 			close: function(html) {
 				parser.end(html);
+				handlers.close();
 				return this;
 			}
 		};
