@@ -21,6 +21,14 @@ require(['jquery','../element.write','qunit'],function($,elementWrite) {
 		equals(el.html(),'<p id="test">hello <i>world</i></p>');
 	});
 
+	test('comments',function() {
+		var el = $('#foo'), writer = elementWrite.toElement(el[0]);
+
+		writer.close('<script><!--//<![CDATA[\n\nfoo\n//]]>--></script>');
+
+		equals($.trim(el.text()),'//\n\nfoo\n//');
+	});
+
 	test('multiple writes',function() {
 		var el = $('#foo'), writer = elementWrite.toElement(el[0]);
 

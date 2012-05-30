@@ -42,9 +42,9 @@
 (function(define){
 
 	// Regular Expressions for parsing tags and attributes
-	var startTag = /^<([-A-Za-z0-9_]+)((?:\s+\w+(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+))?)*)\s*(\/?)>/,
-		endTag = /^<\/([-A-Za-z0-9_]+)[^>]*>/,
-		attr = /([-A-Za-z0-9_]+)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^>\s]+)))?/g;
+	var startTag = /^<([\-A-Za-z0-9_]+)((?:\s+\w+(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+))?)*)\s*(\/?)>/,
+		endTag = /^<\/([\-A-Za-z0-9_]+)[^>]*>/,
+		attr = /([\-A-Za-z0-9_]+)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^>\s]+)))?/g;
 
 	// Empty Elements - HTML 4.01
 	var empty = makeMap("area,base,basefont,br,col,frame,hr,img,input,isindex,link,meta,param,embed");
@@ -72,6 +72,16 @@
 			return this[ this.length - 1 ];
 		};
 
+		function processSpecial(all, text){
+			text = text.replace(/<!--([\s\S]*?)-->/g, "$1")
+				.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1");
+
+			if ( handler.chars )
+				handler.chars( text );
+
+			return "";
+		}
+
 		function parseMore(html) {
 			html = last + html;
 			last = html;
@@ -85,26 +95,18 @@
 				if ( waitingForSpecialBody || (stack.last() && special[ stack.last() ]) ) {
 
 					waitingForSpecialBody = false;
-					var specialBody = new RegExp("(.*?)<\/" + stack.last() + "[^>]*>");
+					var specialBody = new RegExp("([\\s\\S]*?)<\/" + stack.last() + "[^>]*>");
 					if(!html.match(specialBody)) {
 						waitingForSpecialBody = true;
 						return self;
 					}
-					html = html.replace(specialBody, function(all, text){
-						text = text.replace(/<!--(.*?)-->/g, "$1")
-							.replace(/<!\[CDATA\[(.*?)]]>/g, "$1");
-
-						if ( handler.chars )
-							handler.chars( text );
-
-						return "";
-					});
+					html = html.replace(specialBody, processSpecial);
 
 					parseEndTag( "", stack.last() );
 				} else {
 
 					// Comment
-					if ( html.indexOf("<!--") == 0 ) {
+					if ( html.indexOf("<!--") === 0 ) {
 						index = html.indexOf("-->");
 
 						if ( index >= 0 ) {
@@ -116,7 +118,7 @@
 						}
 
 					// end tag
-					} else if ( html.indexOf("</") == 0 ) {
+					} else if ( html.indexOf("</") === 0 ) {
 						match = html.match( endTag );
 
 						if ( match ) {
@@ -127,7 +129,7 @@
 						}
 
 					// start tag
-					} else if ( html.indexOf("<") == 0 ) {
+					} else if ( html.indexOf("<") === 0 ) {
 						match = html.match( startTag );
 
 						if ( match ) {
@@ -199,13 +201,14 @@
 
 		function parseEndTag( tag, tagName ) {
 			if(module.debug.parse) console.log('PARSE parseEndTag',tag,tagName);
+			var pos;
 			// If no tag name is provided, clean shop
 			if ( !tagName )
-				var pos = 0;
+				pos = 0;
 
 			// Find the closest opened tag of the same type
 			else
-				for ( var pos = stack.length - 1; pos >= 0; pos-- )
+				for ( pos = stack.length - 1; pos >= 0; pos-- )
 					if ( stack[ pos ] == tagName )
 						break;
 
@@ -235,7 +238,7 @@
 		};
 
 		return self;
-	};
+	}
 
 	function toElement( element, listeners ) {
 		listeners = listeners || {};
@@ -343,7 +346,7 @@
 				return this;
 			}
 		};
-	};
+	}
 
 	function makeMap(str){
 		var obj = {}, items = str.split(",");
@@ -370,6 +373,6 @@
 	if (typeof exports === 'object') {
 		module.exports = ew;
 	} else {
-    	this.elementWrite = ew;
+		this.elementWrite = ew;
 	}
 });
