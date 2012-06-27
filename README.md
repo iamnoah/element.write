@@ -14,7 +14,7 @@ refactored so that incomplete HTML fragments can be submitted but still generate
 Result:
 
     <div id="id">
-    	<p id="hi">Hello <i>World</id></p>
+    	<p id="hi">Hello <i>World</i></p>
     </div>
 
 ## Ummm, so? You've reinvented innerHTML
