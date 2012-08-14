@@ -282,8 +282,10 @@
 				if(module.debug.write) console.log('WRITE start',tagName,attrs,unary);
 				var elem = doc.createElement( tagName );
 
-				for ( var attr in attrs )
-					elem.setAttribute( attrs[ attr ].name, attrs[ attr ].value );
+				for ( var i = 0; i < attrs.length; i++ ) {
+					var attr = attrs[i];
+					elem.setAttribute( attr.name, attr.value );
+				}
 
 				if ( curParentNode && curParentNode.appendChild ) {
 					curParentNode.appendChild( elem );
