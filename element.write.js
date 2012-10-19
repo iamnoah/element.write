@@ -95,7 +95,7 @@
 				if ( waitingForSpecialBody || (stack.last() && special[ stack.last() ]) ) {
 
 					waitingForSpecialBody = false;
-					var specialBody = new RegExp("([\\s\\S]*?)<\/" + stack.last() + "[^>]*>");
+					var specialBody = new RegExp("([\\s\\S]*?)<\/" + stack.last() + "[^>]*>","i");
 					if(!html.match(specialBody)) {
 						waitingForSpecialBody = true;
 						return self;
